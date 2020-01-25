@@ -293,7 +293,7 @@ class BacktestingEngine:
         # Use the rest of history data for running backtesting
         for data in self.history_data[ix:]:
             func(data)
-
+        #hahah
         self.output("历史数据回放结束")
 
     def calculate_result(self):
