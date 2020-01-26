@@ -168,7 +168,7 @@ class BaseGateway(ABC):
 
         """
         pass
-
+        
     @abstractmethod
     def close(self):
         """
