@@ -37,20 +37,21 @@ from .utility import get_folder_path, TRADER_DIR
 class MainEngine:
     """
     Acts as the core of VN Trader.
+    一个大的类来把策略、ctp行情、事件引擎combine起来
     """
 
     def __init__(self, event_engine: EventEngine = None):
-        """"""
+        """绑定事件引擎"""
         if event_engine:
-            self.event_engine = event_engine
+            self.event_engine = event_engine#这个地方难道还可以绑到其他事件引擎
         else:
             self.event_engine = EventEngine()
         self.event_engine.start()
 
-        self.gateways = {}
-        self.engines = {}
+        self.gateways = {}#这个字典是用来做什么的，是把接口传进来
+        self.engines = {}#传入的引擎
         self.apps = {}
-        self.exchanges = []
+        self.exchanges = []#交易所
 
         os.chdir(TRADER_DIR)    # Change working directory
         self.init_engines()     # Initialize function engines
@@ -58,9 +59,11 @@ class MainEngine:
     def add_engine(self, engine_class: Any):
         """
         Add function engine.
+        不知道这个具体是在做什么
         """
         engine = engine_class(self, self.event_engine)
         self.engines[engine.engine_name] = engine
+        #这样子就可以把引擎的名字和对应的引擎对应起来
         return engine
 
     def add_gateway(self, gateway_class: Type[BaseGateway]):
@@ -111,6 +114,7 @@ class MainEngine:
         if not gateway:
             self.write_log(f"找不到底层接口：{gateway_name}")
         return gateway
+        #这个返回getaway是怎么回事
 
     def get_engine(self, engine_name: str):
         """
