@@ -160,12 +160,16 @@ class BarGenerator:
 
     def __init__(
         self,
-        on_bar: Callable,#这个是Python3之后标记，指的是可调用对象
-        window: int = 0,#used to generating other minute k lines
-        on_window_bar: Callable = None,#keep the finished k line
-        interval: Interval = Interval.MINUTE#
+        on_bar: Callable,
+        window: int = 0,
+        on_window_bar: Callable = None,
+        interval: Interval = Interval.MINUTE
     ):
-        """Constructor"""
+        """Constructor
+        Callable这个是Python3之后标记，指的是可调用对象
+        window: int = 0used to generating other minute k lines
+        on_window_barkeep the finished k line
+        """
         self.bar = None#缓存的K线合成器里面的一分钟k线对象
         self.on_bar = on_bar#k线合成之后，它就会存放在这个地方
 
@@ -186,16 +190,19 @@ class BarGenerator:
         Update new tick data into generator.
         tick后面的:是用来进行解释参数的,能够对tick里面的数据进行联想，方便输入
         """
-        new_minute = False#用来判断是不是新的分钟，如果是新的分钟我们就要把之前的tick数据推送出去
-
+        new_minute = False
+        #用来判断是不是新的分钟，如果是新的分钟我们就要把之前的tick数据推送出去
         # Filter tick data with 0 last price
-        if not tick.last_price:#过滤掉初始化的一些数据，也就是历史数据，
+        if not tick.last_price:
+            #过滤掉初始化的一些数据，也就是历史数据，
             # 但是不知道lastprice具体的怎么来的
             return
-
-        if not self.bar:#这个就是用来判断是否是第一根k线,而且是新的k线刚刚开始，还没有结束
+        
+        if not self.bar:
+            #这个就是用来判断是否是第一根k线,而且是新的k线刚刚#开始，还没有结束
             new_minute = True
-        elif self.bar.datetime.minute != tick.datetime.minute:#bar的数据结构是什么样的，难
+        elif self.bar.datetime.minute != tick.datetime.minute:
+            #bar的数据结构是什么样的，难
             # 从下面的self.bar可以看出什么样的。
             self.bar.datetime = self.bar.datetime.replace(
                 second=0, microsecond=0

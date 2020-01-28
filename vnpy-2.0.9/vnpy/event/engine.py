@@ -8,8 +8,13 @@ from threading import Thread
 from time import sleep
 from typing import Any, Callable
 
-EVENT_TIMER = "eTimer"#这个有什么用呢
-
+EVENT_TIMER = "eTimer"
+#这个有什么用呢
+"""
+调用start()方法，事件处理线程和计时器同时启动，计时器每隔一秒调用___run_timer()方法，
+创建计时器事件，调用put()方法在队尾插入一个事件，事件处理线程每隔一秒获取事件，
+若存在事件调用__process()方法，对事件进行处理。
+"""
 
 class Event:
     """
@@ -53,6 +58,8 @@ class EventEngine:
     def _run(self):
         """
         Get event from queue and then process it.
+        如果队列为空且block为True，get()就使调用线程暂停，直至有项目可用；
+        如果队列为空且block为False，队列将引发Empty异常。
         """
         while self._active:
             try:
@@ -68,10 +75,13 @@ class EventEngine:
 
         Then distrubute event to those general handlers which listens
         to all types.
+
+        优先检查是否存在对该事件进行监听的处理函数，然后调用通用处理函数进行处理
+        计时器启动
         """
         if event.type in self._handlers:
             [handler(event) for handler in self._handlers[event.type]]
-        #如果此类型在self._handlers中，就用handler对应的函数处理event
+        #如果此handler在self._handlers中，就用handler对应的函数处理event
         if self._general_handlers:
             [handler(event) for handler in self._general_handlers]
 
@@ -87,6 +97,7 @@ class EventEngine:
     def start(self):
         """
         Start event engine to process events and generate timer events.
+        利用thread把self.timer和_run_timer联系起来，每隔1000秒这个线程会被调用
         """
         self._active = True
         self._thread.start()

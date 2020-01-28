@@ -91,7 +91,7 @@ class CtaTemplate(ABC):
             "variables": self.get_variables(),
         }
         return strategy_data
-
+        
     @virtual
     def on_init(self):
         """
@@ -126,6 +126,7 @@ class CtaTemplate(ABC):
         Callback of new bar data update.
         """
         pass
+        bar.
 
     @virtual
     def on_trade(self, trade: TradeData):
