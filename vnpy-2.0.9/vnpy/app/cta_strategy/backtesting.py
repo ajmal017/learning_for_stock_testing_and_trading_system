@@ -200,12 +200,15 @@ class BacktestingEngine:
         self.inverse = inverse
 
     def add_strategy(self, strategy_class: type, setting: dict):
-        """"""
+        """
+        setting表示这个策略对应的参数
+        """
         self.strategy_class = strategy_class
         self.strategy = strategy_class(
             self, strategy_class.__name__, self.vt_symbol, setting
-        )#这个括号里面是CtaTemplate本身，class表示策略的名字，vt_symbol交易的合约代码
-        setting是一个字典
+        )
+        #这个括号里面是CtaTemplate本身，class表示策略的名字，vt_symbol交易的合约代码
+        #setting是一个字典，表示参数，传进去之后会在template里面抵用update_setting把里面的参数设置到我们策略对应的参数上面去
     def load_data(self):
         """"""
         self.output("开始加载历史数据")
@@ -229,7 +232,8 @@ class BacktestingEngine:
         progress = 0
 
         while start < self.end:
-            end = min(end, self.end)  # Make sure end time stays within set range
+            end = min(end, self.end)  
+            # Make sure end time stays within set range
 
             if self.mode == BacktestingMode.BAR:
                 data = load_bar_data(
@@ -238,7 +242,8 @@ class BacktestingEngine:
                     self.interval,
                     start,
                     end
-                )#vn.py核心数据库引擎，直接读取数据
+                )
+                #vn.py核心数据库引擎，直接读取数据
             else:
                 data = load_tick_data(
                     self.symbol,
@@ -266,9 +271,8 @@ class BacktestingEngine:
         else:
             func = self.new_tick
 
-        self.strategy.on_init()#启动你所使用的策略的初始化,初始化里面加载了历史bar数据，
-        #用于回测。而且里面已经确定了只传了10天的数据
-
+        self.strategy.on_init()
+        #启动你所使用的策略的初始化,初始化里面加载了历史bar数据，        #用于回测。而且里面已经确定了只传了10天的数据
         # Use the first [days] of history data for initializing strategy
         day_count = 0
         ix = 0

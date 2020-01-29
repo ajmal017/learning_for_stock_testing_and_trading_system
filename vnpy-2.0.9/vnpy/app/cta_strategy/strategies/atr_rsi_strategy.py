@@ -76,6 +76,7 @@ class AtrRsiStrategy(CtaTemplate):
     def on_bar(self, bar: BarData):
         """
         Callback of new bar data update.
+        他这个地方是怎么接收bar
         """
         self.cancel_all()
 
@@ -102,7 +103,7 @@ class AtrRsiStrategy(CtaTemplate):
         elif self.pos > 0:
             self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
             self.intra_trade_low = bar.low_price
-
+            #low没有什么用，只是用来更新最近low价格
             long_stop = self.intra_trade_high * \
                 (1 - self.trailing_percent / 100)
             self.sell(long_stop, abs(self.pos), stop=True)
