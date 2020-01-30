@@ -115,11 +115,11 @@ class NewBarGenerator(BarGenerator):
     """"""
 
     def __init__(
-        on_bar:callable
+        on_bar:callable,
         window:int = 0,
         on_window_bar:callable = None,
-        interval:Interval =Interval.Minute
-    )
+        interval:Interval = Interval.Minute
+    ):
         super().__init__(on_bar,window,on_window_bar,interval)
     #利用55秒这个时间点去划分k先，避免过度拥挤，滑点过多。
     def update_tick(self, tick:TickData):

@@ -30,6 +30,7 @@ class CtaTemplate(ABC):
         self.vt_symbol = vt_symbol
 
         self.inited = False
+        #策略初始化好了之后才能变为True，主要是为计算指标加载需要的最少天数
         self.trading = False
         self.pos = 0
 
@@ -39,6 +40,7 @@ class CtaTemplate(ABC):
         self.variables.insert(0, "inited")
         self.variables.insert(1, "trading")
         self.variables.insert(2, "pos")
+        #为什么不直接在前面定义这三个变量，而要在这个地方定义
 
         self.update_setting(setting)#读出setting里面的字段，
 
@@ -91,7 +93,9 @@ class CtaTemplate(ABC):
             "variables": self.get_variables(),
         }
         return strategy_data
-        
+
+    #@virtual表示子类必须实现的方法，要不然不能实例化，
+    # 这个是不是实盘才能用，感觉回测这个地方没有用到这个    
     @virtual
     def on_init(self):
         """

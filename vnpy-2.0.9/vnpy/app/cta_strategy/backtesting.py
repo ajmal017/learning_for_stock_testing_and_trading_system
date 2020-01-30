@@ -97,7 +97,9 @@ class OptimizationSetting:
 
 
 class BacktestingEngine:
-    """"""
+    """
+    BacktestingEngine这个是回测引擎
+    """
 
     engine_type = EngineType.BACKTESTING
     gateway_name = "BACKTESTING"
@@ -192,8 +194,9 @@ class BacktestingEngine:
         self.start = start
 
         self.symbol, exchange_str = self.vt_symbol.split(".")
+        # vt_symbol='IF88.CFFEX'这个是我们填写的交易品种代码和交易所编号
         self.exchange = Exchange(exchange_str)
-
+        # 这里再定义以下的目的是什么
         self.capital = capital
         self.end = end
         self.mode = mode
@@ -204,15 +207,19 @@ class BacktestingEngine:
         setting表示这个策略对应的参数
         """
         self.strategy_class = strategy_class
+        # 这个就是我们自己写的策略名字
         self.strategy = strategy_class(
             self, strategy_class.__name__, self.vt_symbol, setting
         )
+        #从这个地方开始，self.strategy就表示具体策略
         #这个括号里面是CtaTemplate本身，class表示策略的名字，vt_symbol交易的合约代码
         #setting是一个字典，表示参数，传进去之后会在template里面抵用update_setting把里面的参数设置到我们策略对应的参数上面去
+        #这个strategy_class就相当于把我们自己写的策略加载进去
+    
     def load_data(self):
         """"""
         self.output("开始加载历史数据")
-
+        # 传参数的时候可以先不传，在这个地方可以设置
         if not self.end:
             self.end = datetime.now()
 
@@ -220,8 +227,8 @@ class BacktestingEngine:
             self.output("起始日期必须小于结束日期")
             return
 
-        self.history_data.clear()       # Clear previously loaded history data
-
+        self.history_data.clear()       
+        # Clear previously loaded history data
         # Load 30 days of data each time and allow for progress update
         progress_delta = timedelta(days=30)
         total_delta = self.end - self.start
@@ -243,7 +250,8 @@ class BacktestingEngine:
                     start,
                     end
                 )
-                #vn.py核心数据库引擎，直接读取数据
+                #vn.py核心数据库引擎，直接读取数据，函数的定义在本文件的下面
+                #此处相当于生成了很多的1分钟bar数据，在表格里面一行一行的显示
             else:
                 data = load_tick_data(
                     self.symbol,
@@ -261,10 +269,10 @@ class BacktestingEngine:
 
             start = end + interval_delta
             end += (progress_delta + interval_delta)
+            # start和end进行变化
 
         self.output(f"历史数据加载完成，数据量：{len(self.history_data)}")
-        #
-
+       
     def run_backtesting(self):
         """"""
         if self.mode == BacktestingMode.BAR:
@@ -273,32 +281,37 @@ class BacktestingEngine:
             func = self.new_tick
 
         self.strategy.on_init()
-        #启动你所使用的策略的初始化,初始化里面加载了历史bar数据，        #用于回测。而且里面已经确定了只传了10天的数据
+        # 这个地方跟我们自己写的策略关联起来了
+        #启动你所使用的策略的初始化,初始化里面加载了历史bar数#据用于回测。而且里面已经确定了只传了10天的数据
         # Use the first [days] of history data for initializing strategy
         day_count = 0
         ix = 0
-
+        # 
+        #这个在做的是策略的初始化，满足天数之后就会退出
         for ix, data in enumerate(self.history_data):
-            #history_data是从哪来的
+            #history_data是从load_data中来的
             if self.datetime and data.datetime.day != self.datetime.day:
                 day_count += 1
                 if day_count >= self.days:
                     break
+                #这个self.days是什么意思，很可能是初始传入的天数
 
             self.datetime = data.datetime#这个主要是用来更新最新的时间
             self.callback(data)#这个表示加载数据
 
-        self.strategy.inited = True#这个代码的最早出处是哪
+        self.strategy.inited = True
+        #这个代码的最早出处是CtaTemplate，这个是自己写的策略继承CtaTemplate的方法产生的函数，这个表示自己写的策略如atr_rsi这些策略初始化完成
         self.output("策略初始化完成")
 
         self.strategy.on_start()#对应策略的on_start函数
         self.strategy.trading = True
+        #这个trading是也是在CtaTemplate里面设置的变量，跟inited一样
         self.output("开始回放历史数据")#历史数据回放是什么意思
 
         # Use the rest of history data for running backtesting
         for data in self.history_data[ix:]:
             func(data)
-        #hahah
+        # func = self.new_bar这个是前面赋值给func的函数
         self.output("历史数据回放结束")
 
     def calculate_result(self):
@@ -710,7 +723,7 @@ class BacktestingEngine:
         return results
 
     def update_daily_close(self, price: float):
-        """"""
+        """更新每日收盘价"""
         d = self.datetime.date()
 
         daily_result = self.daily_results.get(d, None)
@@ -723,12 +736,15 @@ class BacktestingEngine:
         """"""
         self.bar = bar
         self.datetime = bar.datetime
-
+        #缓存T时刻最新数据K线和时间戳
         self.cross_limit_order()
         self.cross_stop_order()
         self.strategy.on_bar(bar)
+        #撮合T-1时刻的委托：限价单和停止单；策略受到委托和成交推送
+        #推送T时刻K线给策略，策略收到行情推送
 
         self.update_daily_close(bar.close_price)
+        #更新每日收盘价
 
     def new_tick(self, tick: TickData):
         """"""
@@ -756,7 +772,8 @@ class BacktestingEngine:
             short_cross_price = self.tick.bid_price_1
             long_best_price = long_cross_price
             short_best_price = short_cross_price
-
+        #long_cross_price表示多头可能成交价格
+        #long_best_price多头有机会最好的成交价格
         for order in list(self.active_limit_orders.values()):
             # Push order update with status "not traded" (pending).
             if order.status == Status.SUBMITTING:
@@ -783,7 +800,7 @@ class BacktestingEngine:
             order.traded = order.volume
             order.status = Status.ALLTRADED
             self.strategy.on_order(order)
-
+            #这笔委托推送给策略
             self.active_limit_orders.pop(order.vt_orderid)
             #这个active是我们传进来的吗？怎么产生的
             # Push trade update
@@ -816,9 +833,14 @@ class BacktestingEngine:
 
             self.trades[trade.vt_tradeid] = trade
             #trades是一个字典，保存成交的信息，trade是值
+    
     def cross_stop_order(self):
         """
         Cross stop order with last bar/tick data.
+        T时刻内，价格上下波动，形成T日K线；
+        T时刻走完，基于T日以及之前数据计算通道上下轨
+        T+1时刻开盘，基于上一步的通道上下轨挂出对应的停止单
+        T+1时刻内，价格突破通道是触发停止单，立即发出市价单成交
         """
         if self.mode == BacktestingMode.BAR:
             long_cross_price = self.bar.high_price
@@ -833,6 +855,7 @@ class BacktestingEngine:
 
         for stop_order in list(self.active_stop_orders.values()):
             # Check whether stop order can be triggered.
+            # self.active_stop_orders.values里面的数据结构是什么样子。难道是字典要不然为什么还有stop_order.direcion
             long_cross = (
                 stop_order.direction == Direction.LONG
                 and stop_order.price <= long_cross_price
@@ -863,7 +886,7 @@ class BacktestingEngine:
             order.datetime = self.datetime
 
             self.limit_orders[order.vt_orderid] = order
-            #没有把这笔交易推给策略，没有搞懂为什么
+            #没有把这笔交易推给策略，没有搞懂为什么，这个不是active，因为一旦发出即成交了
             # Create trade data.
             if long_cross:
                 trade_price = max(stop_order.price, long_best_price)

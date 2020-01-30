@@ -64,7 +64,7 @@ STOP_STATUS_MAP = {
 
 
 class CtaEngine(BaseEngine):
-    """"""
+    """CtaEngine这个是实盘引擎"""
 
     engine_type = EngineType.LIVE  # live trading engine
 

@@ -53,7 +53,7 @@ class AtrRsiStrategy(CtaTemplate):
         self.rsi_buy = 50 + self.rsi_entry#初始化好买点
         self.rsi_sell = 50 - self.rsi_entry#初始化好卖点
 
-        self.load_bar(10)#只加载十天的数据，那我们测试好几年的数据是怎么加载进去呢
+        self.load_bar(10)#母类template中的CtaTemplate策略中的方法，只加载十天的数据，那我们测试好几年的数据是怎么加载进去呢
 
     def on_start(self):
         """

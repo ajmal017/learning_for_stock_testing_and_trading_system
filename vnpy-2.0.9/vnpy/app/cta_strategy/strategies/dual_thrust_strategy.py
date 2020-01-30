@@ -78,12 +78,13 @@ class DualThrustStrategy(CtaTemplate):
         self.cancel_all()
 
         self.bars.append(bar)
+        # 缓存k线
         if len(self.bars) <= 2:
             return
         else:
             self.bars.pop(0)
         last_bar = self.bars[-2]
-
+        # 判断是否是另外一天
         if last_bar.datetime.date() != bar.datetime.date():
             if self.day_high:
                 self.range = self.day_high - self.day_low
@@ -102,12 +103,13 @@ class DualThrustStrategy(CtaTemplate):
 
         if not self.range:
             return
-
+        # 有可能有异常情况，对于最高价和最低价是一样的情况，就立即退出。
+        # self.exit_time不一定是整数点3点钟
         if bar.datetime.time() < self.exit_time:
             if self.pos == 0:
                 if bar.close_price > self.day_open:
                     if not self.long_entered:
-                        self.buy(self.long_entry, self.fixed_size, stop=True)#stop表示停止单
+                        self.buy(self.long_entry, self.fixed_size, stop=True)#stop表示停止单，stop=False时，表示的是限价单
                 else:
                     if not self.short_entered:
                         self.short(self.short_entry,
@@ -115,9 +117,9 @@ class DualThrustStrategy(CtaTemplate):
 
             elif self.pos > 0:
                 self.long_entered = True
-
+                # 此处表示每天做多只能做一次
                 self.sell(self.short_entry, self.fixed_size, stop=True)
-
+                # 这个是一个止损单，当价格低于这个价格的时候他就会执行。然后立即开一个空头仓位
                 if not self.short_entered:
                     self.short(self.short_entry, self.fixed_size, stop=True)
 
@@ -130,6 +132,7 @@ class DualThrustStrategy(CtaTemplate):
                     self.buy(self.long_entry, self.fixed_size, stop=True)
 
         else:
+            # 时间一过某个时点，就会在当天用市价单平掉当天的仓位。
             if self.pos > 0:
                 self.sell(bar.close_price * 0.99, abs(self.pos))
             elif self.pos < 0:
