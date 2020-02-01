@@ -78,9 +78,11 @@ class ToraMdSpi(CTORATstpMdSpi):
             self.gateway.write_log(f"行情服务登出失败({error_id})：{error_msg}")
             return
         self.gateway.write_log("行情服务器登出成功")
-
+    #这个函数用来获取tick数据
     def OnRtnDepthMarketData(self, data: CTORATstpMarketDataField) -> Any:
-        """"""
+        """
+        从交易所获取tick数据，并推送给getway
+        """
         if data.ExchangeID not in EXCHANGE_TORA2VT:
             return
         tick_data = TickData(

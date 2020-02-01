@@ -1,4 +1,4 @@
-【from collections import defaultdict
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Callable
 from itertools import product
@@ -294,17 +294,23 @@ class BacktestingEngine:
                 day_count += 1
                 if day_count >= self.days:
                     break
-                #这个self.days是什么意思，很可能是初始传入的天数
-
-            self.datetime = data.datetime#这个主要是用来更新最新的时间
-            self.callback(data)#这个表示加载数据
-
+                #这个self.days是什么意思，很可能是初始传入的天数，这个地方的主要目的是算出ix的值，把初始化的数据删除，然后剩余部分数据进行回测
+            
+            self.datetime = data.datetime
+            #这个主要是用来更新最新的时间
+            //TODO:这里还不是很理解这个callback
+            self.callback(data)
+            #这个表示加载数据，怎么感觉这个地方加载数据只加载了一天？？？
         self.strategy.inited = True
+        //TODO:inited=True是如何与on_bar联系起来的呢
         #这个代码的最早出处是CtaTemplate，这个是自己写的策略继承CtaTemplate的方法产生的函数，这个表示自己写的策略如atr_rsi这些策略初始化完成
+        //TODO:这个是怎么让template检测到inited=True
         self.output("策略初始化完成")
 
         self.strategy.on_start()#对应策略的on_start函数
         self.strategy.trading = True
+        #这个变为True，会启动template中的send_order
+        //TODO:同理这个是怎么检测到的
         #这个trading是也是在CtaTemplate里面设置的变量，跟inited一样
         self.output("开始回放历史数据")#历史数据回放是什么意思
 
@@ -312,12 +318,13 @@ class BacktestingEngine:
         for data in self.history_data[ix:]:
             func(data)
         # func = self.new_bar这个是前面赋值给func的函数
+        # 利用这个可以一条一条的回放
         self.output("历史数据回放结束")
 
     def calculate_result(self):
         """"""
         self.output("开始计算逐日盯市盈亏")
-
+        # 这个trades是从本文件中
         if not self.trades:
             self.output("成交记录为空，无法计算")
             return
@@ -761,6 +768,7 @@ class BacktestingEngine:
         """
         Cross limit order with last bar/tick data.
         此处的回测只用了bar进行了回测，没有用tick进行相应的回测
+        次函数的作用就是在T时刻，把T-1时刻之前所有的委托都进行一遍撮合
         """
         if self.mode == BacktestingMode.BAR:
             long_cross_price = self.bar.low_price
@@ -775,11 +783,13 @@ class BacktestingEngine:
         #long_cross_price表示多头可能成交价格
         #long_best_price多头有机会最好的成交价格
         for order in list(self.active_limit_orders.values()):
-            # Push order update with status "not traded" (pending).
+        //TODO:这个active_limit_orders字典的数据从哪来
+        # Push order update with status "not traded" (pending).key是委托号，value是委托对象
             if order.status == Status.SUBMITTING:
                 order.status = Status.NOTTRADED
                 self.strategy.on_order(order)
-            #status这个属性是从哪来的
+            //TODO:很有可能order里面还有很多的列，其中一个是status
+            #status这个属性是从哪来的，很可能跟object中的BaseData有关系
             # Check whether limit orders can be filled.
             long_cross = (
                 order.direction == Direction.LONG
@@ -802,9 +812,10 @@ class BacktestingEngine:
             self.strategy.on_order(order)
             #这笔委托推送给策略
             self.active_limit_orders.pop(order.vt_orderid)
-            #这个active是我们传进来的吗？怎么产生的
+            //TODO:这个active是我们传进来的吗？怎么产生的
             # Push trade update
             self.trade_count += 1
+            #这个是在init中定义的变量
 
             if long_cross:
                 trade_price = min(order.price, long_best_price)

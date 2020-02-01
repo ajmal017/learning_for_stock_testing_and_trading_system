@@ -193,6 +193,7 @@ class CtaTemplate(ABC):
             vt_orderids = self.cta_engine.send_order(
                 self, direction, offset, price, volume, stop, lock
             )
+        //TODO:就是不知道这些参数是如何传入的
             return vt_orderids
         else:
             return []
@@ -242,7 +243,8 @@ class CtaTemplate(ABC):
             interval,
             callback,
             use_database
-        )#从RQdata上面提取数据，调用ctaegine中的load_bar
+        )
+        #从RQdata上面提取数据，调用ctaegine中的load_bar，这个加载的数据存在哪个地方呢，以什么形式，很有可能是放在callback里面
 
     def load_tick(self, days: int):
         """

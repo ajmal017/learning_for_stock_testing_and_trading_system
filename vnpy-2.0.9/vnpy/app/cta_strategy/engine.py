@@ -76,27 +76,37 @@ class CtaEngine(BaseEngine):
         super(CtaEngine, self).__init__(
             main_engine, event_engine, APP_NAME)
 
-        self.strategy_setting = {}  # strategy_name: dict
-        self.strategy_data = {}     # strategy_name: dict
+        self.strategy_setting = {} 
+        # strategy_name: dict
+        self.strategy_data = {}     
+        # strategy_name: dict
 
-        self.classes = {}           # class_name: stategy_class
-        self.strategies = {}        # strategy_name: strategy
+        self.classes = {}           
+        # class_name: stategy_class
+        self.strategies = {}        
+        # strategy_name: strategy
 
         self.symbol_strategy_map = defaultdict(
-            list)                   # vt_symbol: strategy list
-        self.orderid_strategy_map = {}  # vt_orderid: strategy
+            list)                   
+        # vt_symbol: strategy list
+        self.orderid_strategy_map = {}  
+        # vt_orderid: strategy
         self.strategy_orderid_map = defaultdict(
-            set)                    # strategy_name: orderid list
+            set)                    
+        # strategy_name: orderid list
 
-        self.stop_order_count = 0   # for generating stop_orderid
-        self.stop_orders = {}       # stop_orderid: stop_order
+        self.stop_order_count = 0   
+        # for generating stop_orderid
+        self.stop_orders = {}       
+        # stop_orderid: stop_order
 
         self.init_executor = ThreadPoolExecutor(max_workers=1)
 
         self.rq_client = None
         self.rq_symbols = set()
 
-        self.vt_tradeids = set()    # for filtering duplicate trade
+        self.vt_tradeids = set()    
+        # for filtering duplicate trade
 
         self.offset_converter = OffsetConverter(self.main_engine)
 
