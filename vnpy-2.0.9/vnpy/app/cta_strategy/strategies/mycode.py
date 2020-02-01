@@ -1,4 +1,3 @@
-#coding: UTF-8
 from vnpy.event import EventEngine
 from vnpy.trader.engine import BaseEngine,MainEngine
 from vnpy.gateway.ctp.ctp_gateway import CtpGateway
