@@ -130,7 +130,6 @@ class CtaTemplate(ABC):
         Callback of new bar data update.
         """
         pass
-        bar.
 
     @virtual
     def on_trade(self, trade: TradeData):
@@ -193,7 +192,7 @@ class CtaTemplate(ABC):
             vt_orderids = self.cta_engine.send_order(
                 self, direction, offset, price, volume, stop, lock
             )
-        //TODO:就是不知道这些参数是如何传入的
+        #//TODO:就是不知道这些参数是如何传入的
             return vt_orderids
         else:
             return []

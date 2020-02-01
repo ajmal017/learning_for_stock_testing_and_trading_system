@@ -114,6 +114,7 @@ class EventEngine:
     def put(self, event: Event):
         """
         Put an event object into event queue.
+        被gateway中的on_event函数中self.event_engine.put(event)
         """
         self._queue.put(event)
 
@@ -121,6 +122,7 @@ class EventEngine:
         """
         Register a new handler function for a specific event type. Every
         function can only be registered once for each event type.
+        看懂了，这个self.handlers[type]是一个字典，key是type，value是list，即handler_list(type的处理函数)，下面的流程就是先把key和value关联起来，然后再在handle_list中append添加handler即处理函数
         """
         handler_list = self._handlers[type]
         if handler not in handler_list:
@@ -142,6 +144,7 @@ class EventEngine:
         """
         Register a new handler function for all event types. Every
         function can only be registered once for each event type.
+        这个是注册通用的函数吗
         """
         if handler not in self._general_handlers:
             self._general_handlers.append(handler)

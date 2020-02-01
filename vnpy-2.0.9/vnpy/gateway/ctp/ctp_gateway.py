@@ -228,7 +228,9 @@ class CtpGateway(BaseGateway):
 
 
 class CtpMdApi(MdApi):
-    """"""
+    """
+    Md=marketdata
+    """
 
     def __init__(self, gateway):
         """Constructor"""
@@ -291,6 +293,7 @@ class CtpMdApi(MdApi):
         """
         Callback of tick data update.
         """
+        # //TODO:这个传过来的数据data是什么样子的
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
@@ -339,7 +342,8 @@ class CtpMdApi(MdApi):
             tick.ask_volume_3 = adjust_price(data["AskVolume3"])
             tick.ask_volume_4 = adjust_price(data["AskVolume4"])
             tick.ask_volume_5 = adjust_price(data["AskVolume5"])
-
+        
+        #这个on_tick函数是BaseGateway基类里面定义的
         self.gateway.on_tick(tick)
 
     def connect(self, address: str, userid: str, password: str, brokerid: int):
@@ -379,6 +383,7 @@ class CtpMdApi(MdApi):
     def subscribe(self, req: SubscribeRequest):
         """
         Subscribe to tick data update.
+        他会自动每隔一段时间都运行吗
         """
         if self.login_status:
             self.subscribeMarketData(req.symbol)
@@ -393,7 +398,9 @@ class CtpMdApi(MdApi):
 
 
 class CtpTdApi(TdApi):
-    """"""
+    """
+    Td=tradedata
+    """
 
     def __init__(self, gateway):
         """Constructor"""

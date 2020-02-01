@@ -43,15 +43,15 @@ class MainEngine:
     def __init__(self, event_engine: EventEngine = None):
         """绑定事件引擎"""
         if event_engine:
-            self.event_engine = event_engine#这个地方难道还可以绑到其他事件引擎
+            self.event_engine = event_engine    #这个地方难道还可以绑到其他事件引擎
         else:
             self.event_engine = EventEngine()
         self.event_engine.start()
 
-        self.gateways = {}#这个字典是用来做什么的，是把接口传进来
-        self.engines = {}#传入的引擎
+        self.gateways = {}      #这个字典是用来做什么的，是把接口传进来
+        self.engines = {}       #传入的引擎
         self.apps = {}
-        self.exchanges = []#交易所
+        self.exchanges = []     #交易所
 
         os.chdir(TRADER_DIR)    # Change working directory
         self.init_engines()     # Initialize function engines
@@ -61,19 +61,28 @@ class MainEngine:
         Add function engine.
         不知道这个具体是在做什么
         """
+        #//TODO:这个具体是做什么
         engine = engine_class(self, self.event_engine)
         self.engines[engine.engine_name] = engine
-        #这样子就可以把引擎的名字和对应的引擎对应起来
+        # 这样子就可以把引擎的名字和对应的引擎对应起来
         return engine
 
     def add_gateway(self, gateway_class: Type[BaseGateway]):
         """
-        Add gateway.
+        Add gateway：添加接口；
+        这个函数传入CTPGateway，将传入的CTPGateway
         """
+        
         gateway = gateway_class(self.event_engine)
+        # //TODO:这个geteway_class是从哪冒出来的
+        # 这里得到一个gateway_class（是CTPGateway之类，不是BaseGateway）的实例，实例的参数是init MainEngine的时候传入的event_engine
+
         self.gateways[gateway.gateway_name] = gateway
+        # 调用上面的实例的gateway_name属性，并作为字典的键
+        # 这里得到了gateways字典，在下面的get_gateway函数要用，取出gateway。
 
         # Add gateway supported exchanges into engine
+        # 取出gateway的exchanges类属性（列表，非实例属性），
         for exchange in gateway.exchanges:
             if exchange not in self.exchanges:
                 self.exchanges.append(exchange)
@@ -102,6 +111,8 @@ class MainEngine:
         """
         Put log event with specific message.
         """
+        # LogData继承自BaseData，BaseData有gateway_name，所以这里可以传gateway_name，得到LogData对象。
+        # //TODO: 不知道这个函数在做什么
         log = LogData(msg=msg, gateway_name=source)
         event = Event(EVENT_LOG, log)
         self.event_engine.put(event)
@@ -109,6 +120,7 @@ class MainEngine:
     def get_gateway(self, gateway_name: str):
         """
         Return gateway object by name.
+        作用是传入CtpGateway，从字典中取出CtpGateway实例，再返回这个实例
         """
         gateway = self.gateways.get(gateway_name, None)
         if not gateway:
@@ -163,11 +175,12 @@ class MainEngine:
     def subscribe(self, req: SubscribeRequest, gateway_name: str):
         """
         Subscribe tick data update of a specific gateway.
+        根据传入的CtpGateway，调用get_gateway函数取出CtpGateway实例，然后订阅行情。
         """
         gateway = self.get_gateway(gateway_name)
         if gateway:
             gateway.subscribe(req)
-
+            #调用CTPGateway实例的subscribe方法，而self.md_api.subscribe(req)的方法就是self.md_api.subscribe(req)，即底层API，而传入的参数是SubscribeRequest（一个类），应该是{self.symbol}.{self.exchange.value}这样的形式
     def send_order(self, req: OrderRequest, gateway_name: str):
         """
         Send new order request to a specific gateway.
