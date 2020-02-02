@@ -14,8 +14,9 @@ from ..engine import (
 
 
 class RecorderManager(QtWidgets.QWidget):
-    """"""
-
+    """
+    注册EVENT_TICK、EVENT_CONTRACT，当有EVENT_TICK的时候，调用process_contract_event函数（其实就是record_tick函数），将task put到queue，通过run函数，从self.queue获得task（Tick、Bar),调用database_manager的方法储存数据
+    """
     signal_log = QtCore.pyqtSignal(Event)
     signal_update = QtCore.pyqtSignal(Event)
     signal_contract = QtCore.pyqtSignal(Event)
@@ -138,9 +139,11 @@ class RecorderManager(QtWidgets.QWidget):
         model.setStringList(self.vt_symbols)
 
     def add_bar_recording(self):
-        """"""
+        """
+        将symbol数据写入bar_recordings["symbol"]这个字典，订阅合约，调用save_setting进行保存(里面有tick_recordings，bar_recordings字典)，然后调用put_event(实质为调用Eventengine的self._queue.put(event))，将事件放入队列。
+        """
         vt_symbol = self.symbol_line.text()
-        self.recorder_engine.add_bar_recording(vt_symbol)
+        self.recorder_engine.add_bar_recording(vt_symbol)   #f"已在K线记录列表中：{vt_symbol}"
 
     def add_tick_recording(self):
         """"""

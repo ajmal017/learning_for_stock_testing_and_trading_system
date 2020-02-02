@@ -3,7 +3,7 @@ General constant string used in VN Trader.
 """
 
 from enum import Enum
-
+# 枚举类型可以看作是一种标签或是一系列常量的集合，通常用于表示某些特定的有限集合，例如星期、月份、状态等。
 
 class Direction(Enum):
     """
