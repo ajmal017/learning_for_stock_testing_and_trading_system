@@ -523,7 +523,7 @@ class EmailEngine(BaseEngine):
 
         self.main_engine.send_email = self.send_email
 
-    def send_email(self, subject: str, content: str, receiver: str = "395252848@qq.com"):
+    def send_email(self, subject: str, content: str, receiver: str = ""):
         """"""
         # Start email engine when sending first email.
         if not self.active:
@@ -534,7 +534,7 @@ class EmailEngine(BaseEngine):
             receiver = SETTINGS["email.receiver"]
 
         msg = EmailMessage()
-        msg["From"] = SETTINGS["395252848@qq.com"]
+        msg["From"] = SETTINGS["email.sender"]
         msg["To"] = SETTINGS["email.receiver"]
         msg["Subject"] = subject
         msg.set_content(content)
