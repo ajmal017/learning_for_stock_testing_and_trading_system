@@ -1,23 +1,20 @@
-import os
 import importlib
+import os
 import traceback
 from datetime import datetime
-from threading import Thread
-from pathlib import Path
 from inspect import getfile
+from pathlib import Path
+from threading import Thread
 
+from vnpy.app.cta_strategy import (BacktestingEngine, CtaTemplate,
+                                   OptimizationSetting)
 from vnpy.event import Event, EventEngine
-from vnpy.trader.engine import BaseEngine, MainEngine
 from vnpy.trader.constant import Interval
-from vnpy.trader.utility import extract_vt_symbol
+from vnpy.trader.database import database_manager
+from vnpy.trader.engine import BaseEngine, MainEngine
 from vnpy.trader.object import HistoryRequest
 from vnpy.trader.rqdata import rqdata_client
-from vnpy.trader.database import database_manager
-from vnpy.app.cta_strategy import (
-    CtaTemplate,
-    BacktestingEngine,
-    OptimizationSetting
-)
+from vnpy.trader.utility import extract_vt_symbol
 
 APP_NAME = "CtaBacktester"
 
