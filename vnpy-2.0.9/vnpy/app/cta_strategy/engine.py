@@ -21,7 +21,7 @@ from vnpy.trader.object import (
     BarData,
     ContractData
 )
-from vnpy.trader.event import (
+from vnpy.trader.event import ( 
     EVENT_TICK,
     EVENT_ORDER,
     EVENT_TRADE,
@@ -62,7 +62,7 @@ STOP_STATUS_MAP = {
     Status.REJECTED: StopOrderStatus.CANCELLED
 }
 
-
+# 是ctaTemplate -> CtaEngine->mainEngine ->ctpgateway ->CtpT dApi, 传到C++封装的接口。返回的就是vtOrderID
 class CtaEngine(BaseEngine):
     """CtaEngine这个是实盘引擎"""
 
@@ -75,6 +75,7 @@ class CtaEngine(BaseEngine):
         """"""
         super(CtaEngine, self).__init__(
             main_engine, event_engine, APP_NAME)
+        #//TODO:这个super(CtaEngine)这个是什么意思
 
         self.strategy_setting = {} 
         # strategy_name: dict
@@ -114,10 +115,16 @@ class CtaEngine(BaseEngine):
         """
         """
         self.init_rqdata()
+        #如果没配置rqdata的可忽略
         self.load_strategy_class()
+        #从几个文件夹中读取策略类，并将其保存在self.classes字典中，用类名做key，类做value。
         self.load_strategy_setting()
+        #根据策略配置文件cta_strategy_setting.json读取配置，如果不存在该文件则创建文件，内容为{}。
+        #cta_strategy_setting.json保存何种数据：从逻辑上想，根据策略名将数据切分，每个策略实例都有自身对应的合约、策略类、参数字典。
         self.load_strategy_data()
+        #从策略数据文件cta_strategy_data.json中读取本地保存的数据。
         self.register_event()
+        #将Tick，Position，Order，Trade事件推送给引擎相应处理函数。
         self.write_log("CTA策略引擎初始化成功")
 
     def close(self):
@@ -788,13 +795,18 @@ class CtaEngine(BaseEngine):
         """
         try:
             module = importlib.import_module(module_name)
+            #//TODO:这个module_name的名字是从哪里来的
 
-            for name in dir(module):
+            for name in dir(module):#返回模块的属性列表
                 value = getattr(module, name)
-                if (isinstance(value, type) and issubclass(value, CtaTemplate) and value is not CtaTemplate):
+                if (isinstance(value, type) and issubclass
+                (value, CtaTemplate) and value is not CtaTemplate):
+                # 语法：isinstance（object，type）来判断一个对象是否是一个已知的类型。
+                # issubclass用于判断前者是否是后者的子类
                     self.classes[value.__name__] = value
-        except:  # noqa
+        except:  
             msg = f"策略文件{module_name}加载失败，触发异常：\n{traceback.format_exc()}"
+            # 以 f开头表示在字符串内支持大括号内的python 表达式
             self.write_log(msg)
 
     def load_strategy_data(self):

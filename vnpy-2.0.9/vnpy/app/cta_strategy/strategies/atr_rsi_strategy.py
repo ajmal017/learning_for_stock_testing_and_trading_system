@@ -41,6 +41,7 @@ class AtrRsiStrategy(CtaTemplate):
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
         super().__init__(cta_engine, strategy_name, vt_symbol, setting)
+        # 这里是调用
         self.bg = BarGenerator(self.on_bar)#简化书写过程
         self.am = ArrayManager()#同理
 

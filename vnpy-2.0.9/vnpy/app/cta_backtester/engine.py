@@ -29,6 +29,7 @@ EVENT_BACKTESTER_OPTIMIZATION_FINISHED = "eBacktesterOptimizationFinished"
 class BacktesterEngine(BaseEngine):
     """
     For running CTA strategy backtesting.
+    回测引擎
     """
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine):
@@ -64,6 +65,7 @@ class BacktesterEngine(BaseEngine):
         Init RQData client.
         """
         result = rqdata_client.init()
+        # 这个rqdata_client在trader里面
         if result:
             self.write_log("RQData数据接口初始化成功")
 

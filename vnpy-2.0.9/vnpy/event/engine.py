@@ -24,13 +24,16 @@ class Event:
     """
 
     def __init__(self, type: str, data: Any = None):
-        """"""
+        """
+        获取事件类型和数据
+        """
         self.type = type
         self.data = data
 
 
 # Defines handler function to be used in event engine.
 HandlerType = Callable[[Event], None]
+# 检查对象是否可以调用，可调用返回True
 
 
 class EventEngine:
@@ -48,13 +51,13 @@ class EventEngine:
         interval not specified.
         """
         self._interval = interval
-        self._queue = Queue()#队列，FIFO，有put和get方法
+        self._queue = Queue()#队列，FIFO，有put和get方法，存储事件
         self._active = False
         self._thread = Thread(target=self._run)#线程中工作的函数是self._run
         self._timer = Thread(target=self._run_timer)#此处表示线程工作中运行的是self._run_timer
         self._handlers = defaultdict(list)#defaultdic可以在访问字典中不存在的键时，不会返回错误
         self._general_handlers = []
-
+    # (2)
     def _run(self):
         """
         Get event from queue and then process it.
@@ -84,7 +87,7 @@ class EventEngine:
         #如果此handler在self._handlers中，就用handler对应的函数处理event
         if self._general_handlers:
             [handler(event) for handler in self._general_handlers]
-
+    # (3)
     def _run_timer(self):
         """
         Sleep by interval second(s) and then generate a timer event.
@@ -94,6 +97,7 @@ class EventEngine:
             event = Event(EVENT_TIMER)
             self.put(event)
 
+    # (1)
     def start(self):
         """
         Start event engine to process events and generate timer events.
@@ -110,6 +114,7 @@ class EventEngine:
         self._active = False
         self._timer.join()
         self._thread.join()
+        # 无参数，则等待到该线程结束，才开始执行下一个线程的join。
 
     def put(self, event: Event):
         """

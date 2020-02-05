@@ -38,6 +38,8 @@ class MainEngine:
     """
     Acts as the core of VN Trader.
     一个大的类来把策略、ctp行情、事件引擎combine起来
+    
+    ctaTemplate -> CtaEngine->mainEngine ->ctpgateway ->CtpT dApi, 传到C++封装的接口。返回的就是vtOrderID
     """
 
     def __init__(self, event_engine: EventEngine = None):
@@ -48,14 +50,16 @@ class MainEngine:
             self.event_engine = EventEngine()
         self.event_engine.start()
 
-        self.gateways = {}      #这个字典是用来做什么的，是把接口传进来
+        self.gateways = {}      #这个字典的key是借口名称，value是key对应的引擎
         self.engines = {}       #传入的引擎
         self.apps = {}
         self.exchanges = []     #交易所
 
         os.chdir(TRADER_DIR)    # Change working directory
+        # 用于改变当前工作的目录，from .utility import get_folder_path, TRADER_DIR，是这个地方把这个值引导过来了
         self.init_engines()     # Initialize function engines
-
+    
+    # 添加引擎
     def add_engine(self, engine_class: Any):
         """
         Add function engine.
@@ -63,10 +67,12 @@ class MainEngine:
         """
         #//TODO:这个具体是做什么
         engine = engine_class(self, self.event_engine)
+        # 返回的是engine_class的一个实例对象，如返回EmailEngine，engine_class可以指BacktesterEngine或CtaEngine等。
         self.engines[engine.engine_name] = engine
         # 这样子就可以把引擎的名字和对应的引擎对应起来
         return engine
 
+    # 添加网管
     def add_gateway(self, gateway_class: Type[BaseGateway]):
         """
         Add gateway：添加接口；
@@ -89,6 +95,7 @@ class MainEngine:
 
         return gateway
 
+    # 添加app//TODO:app具体指什么
     def add_app(self, app_class: Type[BaseApp]):
         """
         Add app.
@@ -98,7 +105,8 @@ class MainEngine:
 
         engine = self.add_engine(app.engine_class)
         return engine
-
+    
+    # 初始化引擎
     def init_engines(self):
         """
         Init all engines.
@@ -106,7 +114,7 @@ class MainEngine:
         self.add_engine(LogEngine)
         self.add_engine(OmsEngine)
         self.add_engine(EmailEngine)
-
+    # 写入日志
     def write_log(self, msg: str, source: str = ""):
         """
         Put log event with specific message.
@@ -116,18 +124,19 @@ class MainEngine:
         log = LogData(msg=msg, gateway_name=source)
         event = Event(EVENT_LOG, log)
         self.event_engine.put(event)
-
+    
     def get_gateway(self, gateway_name: str):
         """
         Return gateway object by name.
-        作用是传入CtpGateway，从字典中取出CtpGateway实例，再返回这个实例
+        作用是传入CtpGateway，从字典中取出CtpGateway实例，再返回这个实例，getway_name=
         """
         gateway = self.gateways.get(gateway_name, None)
         if not gateway:
             self.write_log(f"找不到底层接口：{gateway_name}")
         return gateway
         #这个返回getaway是怎么回事
-
+    
+    # 获得引擎  
     def get_engine(self, engine_name: str):
         """
         Return engine object by name.
@@ -137,6 +146,7 @@ class MainEngine:
             self.write_log(f"找不到引擎：{engine_name}")
         return engine
 
+    #获得默认设置
     def get_default_setting(self, gateway_name: str):
         """
         Get default setting dict of a specific gateway.
@@ -145,25 +155,29 @@ class MainEngine:
         if gateway:
             return gateway.get_default_setting()
         return None
-
+    
+    # 获得所有引擎的名字
     def get_all_gateway_names(self):
         """
         Get all names of gatewasy added in main engine.
         """
         return list(self.gateways.keys())
 
+    # 获得所有的APP
     def get_all_apps(self):
         """
         Get all app objects.
         """
         return list(self.apps.values())
-
+    
+    # 获得所有的交易所
     def get_all_exchanges(self):
         """
         Get all exchanges.
         """
         return self.exchanges
-
+    
+    # 连接到行情
     def connect(self, setting: dict, gateway_name: str):
         """
         Start connection of a specific gateway.
@@ -172,6 +186,7 @@ class MainEngine:
         if gateway:
             gateway.connect(setting)
 
+    # 合约订阅
     def subscribe(self, req: SubscribeRequest, gateway_name: str):
         """
         Subscribe tick data update of a specific gateway.
@@ -181,6 +196,8 @@ class MainEngine:
         if gateway:
             gateway.subscribe(req)
             #调用CTPGateway实例的subscribe方法，而self.md_api.subscribe(req)的方法就是self.md_api.subscribe(req)，即底层API，而传入的参数是SubscribeRequest（一个类），应该是{self.symbol}.{self.exchange.value}这样的形式
+    
+    # 下单
     def send_order(self, req: OrderRequest, gateway_name: str):
         """
         Send new order request to a specific gateway.
@@ -191,6 +208,7 @@ class MainEngine:
         else:
             return ""
 
+    # 取消订单
     def cancel_order(self, req: CancelRequest, gateway_name: str):
         """
         Send cancel order request to a specific gateway.
@@ -199,6 +217,7 @@ class MainEngine:
         if gateway:
             gateway.cancel_order(req)
 
+    # 批量下单
     def send_orders(self, reqs: Sequence[OrderRequest], gateway_name: str):
         """
         """
@@ -208,6 +227,7 @@ class MainEngine:
         else:
             return ["" for req in reqs]
 
+    # 批量取消订单
     def cancel_orders(self, reqs: Sequence[CancelRequest], gateway_name: str):
         """
         """
@@ -215,6 +235,7 @@ class MainEngine:
         if gateway:
             gateway.cancel_orders(reqs)
 
+    # 历史查询
     def query_history(self, req: HistoryRequest, gateway_name: str):
         """
         Send cancel order request to a specific gateway.
@@ -225,6 +246,7 @@ class MainEngine:
         else:
             return None
 
+    # 关闭
     def close(self):
         """
         Make sure every gateway and app is closed properly before
@@ -523,7 +545,7 @@ class EmailEngine(BaseEngine):
 
         self.main_engine.send_email = self.send_email
 
-    def send_email(self, subject: str, content: str, receiver: str = ""):
+    def send_email(self, subject: str, content: str, receiver: str = "395252848@qq.com"):
         """"""
         # Start email engine when sending first email.
         if not self.active:

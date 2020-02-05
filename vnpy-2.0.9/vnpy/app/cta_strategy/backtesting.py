@@ -188,6 +188,7 @@ class BacktestingEngine:
         self.mode = mode
         self.vt_symbol = vt_symbol
         self.interval = Interval(interval)
+        # 这个地方很有可能转化为MINUTE
         self.rate = rate
         self.slippage = slippage
         self.size = size
@@ -234,7 +235,7 @@ class BacktestingEngine:
         progress_delta = timedelta(days=30)
         total_delta = self.end - self.start
         interval_delta = INTERVAL_DELTA_MAP[self.interval]
-
+        #   为什么转这么大的一个弯，转化成一秒一小时一天呢？？
         start = self.start
         end = self.start + progress_delta
         progress = 0
@@ -269,6 +270,7 @@ class BacktestingEngine:
             self.output(f"加载进度：{progress_bar} [{progress:.0%}]")
 
             start = end + interval_delta
+            # 这个地方一定要注意是从end的下一秒或一小时开始，所以需要加一个interval_delta
             end += (progress_delta + interval_delta)
             # start和end进行变化
 
