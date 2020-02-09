@@ -303,14 +303,15 @@ class BacktestingEngine:
             #这个主要是用来更新最新的时间
             #//TODO:这里还不是很理解这个callback
             self.callback(data)
-            #这个表示加载数据，怎么感觉这个地方加载数据只加载了一天？？？
+            # 在template里面加载了callback函数，callback=on_bar
         self.strategy.inited = True
         #//TODO:inited=True是如何与on_bar联系起来的呢
         #这个代码的最早出处是CtaTemplate，这个是自己写的策略继承CtaTemplate的方法产生的函数，这个表示自己写的策略如atr_rsi这些策略初始化完成
         #//TODO:这个是怎么让template检测到inited=True
         self.output("策略初始化完成")
 
-        self.strategy.on_start()#对应策略的on_start函数
+        self.strategy.on_start()
+        #对应策略的on_start函数，感觉没做什么事情
         self.strategy.trading = True
         #这个变为True，会启动template中的send_order
         #//TODO:同理这个是怎么检测到的
