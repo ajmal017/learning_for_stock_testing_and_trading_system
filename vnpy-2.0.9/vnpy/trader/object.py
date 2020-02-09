@@ -80,7 +80,9 @@ class TickData(BaseData):
 class BarData(BaseData):
     """
     Candlestick bar data of a certain trading period.
-    这个类感觉啥也没做，怎么就画出了k线呢
+    @dataclass和__post_init__这两个功能结合起来就能实现
+    把前面的变量初始化，这样子就不用传入太多的变量在init里面
+    节约代码的书写量和美观
     """
 
     symbol: str
