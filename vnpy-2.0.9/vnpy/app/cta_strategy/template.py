@@ -51,16 +51,19 @@ class CtaTemplate(ABC):
         for name in self.parameters:
             if name in setting:
                 setattr(self, name, setting[name])#把参数名字设置到实例当中去
-
+    
+    #  classmethod 修饰符对应的函数不需要实例化
     @classmethod
     def get_class_parameters(cls):
         """
         Get default parameters dict of strategy class.
+        这个cls表示所在的类Ctatemplate
         """
         class_parameters = {}
         for name in cls.parameters:
             class_parameters[name] = getattr(cls, name)
         return class_parameters
+        # 获取cls的name对应的属性值
 
     def get_parameters(self):
         """
@@ -99,7 +102,7 @@ class CtaTemplate(ABC):
     @virtual
     def on_init(self):
         """
-        Callback when strategy is inited.
+        Callback when strategy is inited.？？？
         """
         pass
 
@@ -243,7 +246,7 @@ class CtaTemplate(ABC):
             callback,
             use_database
         )
-        #从RQdata上面提取数据，调用ctaegine中的load_bar，这个加载的数据存在哪个地方呢，以什么形式，很有可能是放在callback里面
+        #从RQdata上面提取数据，调用ctaegine中的load_bar，这个加载的数据存在哪个地方呢，以什么形式，是从use_database的数据库里面取得数据的。
 
     def load_tick(self, days: int):
         """
