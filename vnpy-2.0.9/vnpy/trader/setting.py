@@ -8,7 +8,7 @@ from .utility import load_json
 
 SETTINGS = {
     "font.family": "Arial",
-    "font.size": 12,
+    "font.size": 9,
 
     "log.active": True,
     "log.level": CRITICAL,
@@ -17,12 +17,12 @@ SETTINGS = {
 
     "email.server": "smtp.qq.com",
     "email.port": 465,
-    "email.username": "",
-    "email.password": "",
-    "email.sender": "",
-    "email.receiver": "",
+    "email.username": "395252848@qq.com",
+    "email.password": "moqlhyyjveeocbci",
+    "email.sender": "395252848@qq.com",
+    "email.receiver": "395252848@qq.com",
 
-    "rqdata.username": "",
+    "rqdata.username": "license",
     "rqdata.password": "",
 
     "database.driver": "sqlite",  # see database.Driver

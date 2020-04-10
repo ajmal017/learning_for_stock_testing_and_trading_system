@@ -101,10 +101,11 @@ class BarData(BaseData):
         """"""
         self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
 
-
+# 这个文件中主要是定义了vnpy中的基础数据结构的文件
 @dataclass
 class OrderData(BaseData):
     """
+    这个是一个中间存储，最后是为tradeData服务的
     Order data contains information for tracking lastest status
     of a specific order.
     """

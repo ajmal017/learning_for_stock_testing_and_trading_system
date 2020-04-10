@@ -49,6 +49,7 @@ def _get_trader_dir(temp_name: str):
 
     # Otherwise use home path of system.
     home_path = Path.home()
+    # C:\Users\Administrator
     temp_path = home_path.joinpath(temp_name)
 
     # Create .vntrader folder under home path if not exist.
@@ -93,7 +94,7 @@ def load_json(filename: str):
     Load data from json file in temp path.
     """
     filepath = get_file_path(filename)
-
+    # 转到
     if filepath.exists():
         with open(filepath, mode="r", encoding="UTF-8") as f:
             data = json.load(f)
@@ -170,49 +171,52 @@ class BarGenerator:
         window: int = 0used to generating other minute k lines
         on_window_barkeep the finished k line
         """
-        self.bar = None#缓存的K线合成器里面的一分钟k线对象
-        self.on_bar = on_bar#k线合成之后，它就会存放在这个地方
+        self.bar = None  # 缓存的K线合成器里面的一分钟k线对象
+        self.on_bar = on_bar  # k线合成之后，它就会存放在这个地方
 
         self.interval = interval
         self.interval_count = 0
 
         self.window = window
-        self.window_bar = None#自定义的n分钟小时的k线对象
-        self.on_window_bar = on_window_bar#这个和上面有什么区别呢
+        self.window_bar = None  # 自定义的n分钟小时的k线对象
+        self.on_window_bar = on_window_bar
+        # 这个和上面有什么区别呢,这个可能就需要你自己去设置一个on_5min_bar,然后再传进去，或者你自己设置一个Newbargeneror，里面进行相应的处理。
 
         self.last_tick = None
         self.last_bar = None
 
-    def update_tick(self, tick:TickData):
+    def update_tick(self, tick: TickData):
         """
+        事件驱动
         它是如何知道有新的tick进来的，难道是自动检测吗，如果是他是在哪个地方可以自动检测新的tick，
         然后加载进入update_tick
         Update new tick data into generator.
         tick后面的:是用来进行解释参数的,能够对tick里面的数据进行联想，方便输入
         """
         new_minute = False
-        #用来判断是不是新的分钟，如果是新的分钟我们就要把之前的tick数据推送出去
+        # 用来判断是不是新的分钟，如果是新的分钟我们就要把之前的tick数据推送出去
         # Filter tick data with 0 last price
         if not tick.last_price:
-            #过滤掉初始化的一些数据，也就是历史数据，
+            # 过滤掉初始化的一些数据，也就是历史数据，
             # 但是不知道lastprice具体的怎么来的
             return
-        
+
         if not self.bar:
-            #这个就是用来判断是否是第一根k线,而且是新的k线刚刚#开始，还没有结束
+            # 这个就是用来判断是否是第一根k线,而且是新的k线刚刚#开始，还没有结束
             new_minute = True
         elif self.bar.datetime.minute != tick.datetime.minute:
-            #bar的数据结构是什么样的，难
+            # bar的数据结构是什么样的，难
             # 从下面的self.bar可以看出什么样的。
             self.bar.datetime = self.bar.datetime.replace(
                 second=0, microsecond=0
             )
-            self.on_bar(self.bar)#把他推送出去是什么意思，难道bar是正在处理的，on_bar是已经处理好了
-                # 类似一个仓库一样
+            self.on_bar(self.bar)  # 把他推送出去是什么意思，难道bar是正在处理的，on_bar是已经处理好了
+            # 类似一个仓库一样
 
             new_minute = True
 
-        if new_minute:#新的分钟k线形成的时候
+        if new_minute:
+            # 新的分钟k线形成的时候,在一分鐘線最開始的時候生成
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
@@ -225,7 +229,9 @@ class BarGenerator:
                 close_price=tick.last_price,
                 open_interest=tick.open_interest
             )
-        else:#分钟k线没有形成的时候
+        else:
+            # 這個BarData的数据结构是什么样的
+            # 在新的一分鐘開始後的第二個tick開始改變這些數據
             self.bar.high_price = max(self.bar.high_price, tick.last_price)
             self.bar.low_price = min(self.bar.low_price, tick.last_price)
             self.bar.close_price = tick.last_price
@@ -234,10 +240,10 @@ class BarGenerator:
 
         if self.last_tick:
             volume_change = tick.volume - self.last_tick.volume
-            #tick.volume表示的是截止到目前全部的成交量
+            # tick.volume表示的是截止到目前全部的成交量
             self.bar.volume += max(volume_change, 0)
 
-        self.last_tick = tick#这个tick是一条一条推送的吗，要不然有几行怎么知道选哪行呢
+        self.last_tick = tick  # 这个tick是一条一条推送的吗，要不然有几行怎么知道选哪行呢
 
     def update_bar(self, bar: BarData):
         """
@@ -298,6 +304,7 @@ class BarGenerator:
 
         # Cache last bar object
         self.last_bar = bar
+    # 强制合成k线，针对郑州商品期货不推送最后一个收盘价的情况
 
     def generate(self):
         """
@@ -336,19 +343,23 @@ class ArrayManager(object):
         self.count += 1
         if not self.inited and self.count >= self.size:
             self.inited = True
-        #先把第100个的位置让出来，
+        # 先把第100个的位置让出来，
         self.open_array[:-1] = self.open_array[1:]
         self.high_array[:-1] = self.high_array[1:]
         self.low_array[:-1] = self.low_array[1:]
         self.close_array[:-1] = self.close_array[1:]
         self.volume_array[:-1] = self.volume_array[1:]
-        #把最新的bar价格推到最后面去，这个就能够不断的更新
+        # 把最新的bar价格推到最后面去，这个就能够不断的更新
         self.open_array[-1] = bar.open_price
         self.high_array[-1] = bar.high_price
         self.low_array[-1] = bar.low_price
         self.close_array[-1] = bar.close_price
         self.volume_array[-1] = bar.volume
 
+
+    # @property可以使得访问更加的简单，如没有这个访问是这样的如
+    # open=am.open()需要有括号，但是如果加了这个装饰器，就可以使用open=am.open,不再需要那个括号了
+    # 下面这个四个函数其实没有特殊的功能，只是让我们在调用open、high这些数据的时候更加的方便，要不然需要使用self.open_array 
     @property
     def open(self):
         """

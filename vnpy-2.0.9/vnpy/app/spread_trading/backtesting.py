@@ -220,7 +220,7 @@ class BacktestingEngine:
                 results[key].append(value)
 
         self.daily_df = DataFrame.from_dict(results).set_index("date")
-
+        self.daily_df=self.daily_df[self.daily_df.trade_count>0]
         self.output("逐日盯市盈亏计算完成")
         return self.daily_df
 

@@ -145,9 +145,10 @@ class CtpGateway(BaseGateway):
     def __init__(self, event_engine):
         """Constructor"""
         super().__init__(event_engine, "CTP")
-
-        self.td_api = CtpTdApi(self)
-        self.md_api = CtpMdApi(self)
+        # 这个地方把'CTP'和CtpGateway联系起来了
+        self.td_api = CtpTdApi(self)  # 行情API
+        # 传进去self和不传进去有什么区别，有时候实例化没传
+        self.md_api = CtpMdApi(self)  # 交易API
 
     def connect(self, setting: dict):
         """"""
@@ -172,7 +173,8 @@ class CtpGateway(BaseGateway):
         ):
             md_address = "tcp://" + md_address
 
-        self.td_api.connect(td_address, userid, password, brokerid, auth_code, appid, product_info)
+        self.td_api.connect(td_address, userid, password,
+                            brokerid, auth_code, appid, product_info)
         self.md_api.connect(md_address, userid, password, brokerid)
 
         self.init_query()
@@ -230,6 +232,7 @@ class CtpGateway(BaseGateway):
 class CtpMdApi(MdApi):
     """
     Md=marketdata
+
     """
 
     def __init__(self, gateway):
@@ -293,7 +296,7 @@ class CtpMdApi(MdApi):
         """
         Callback of tick data update.
         """
-        # //TODO:这个传过来的数据data是什么样子的
+        # 这个传过来的数据data是什么样子的
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
@@ -342,8 +345,8 @@ class CtpMdApi(MdApi):
             tick.ask_volume_3 = adjust_price(data["AskVolume3"])
             tick.ask_volume_4 = adjust_price(data["AskVolume4"])
             tick.ask_volume_5 = adjust_price(data["AskVolume5"])
-        
-        #这个on_tick函数是BaseGateway基类里面定义的
+
+        # 这个on_tick函数是BaseGateway基类里面定义的
         self.gateway.on_tick(tick)
 
     def connect(self, address: str, userid: str, password: str, brokerid: int):
@@ -387,6 +390,7 @@ class CtpMdApi(MdApi):
         """
         if self.login_status:
             self.subscribeMarketData(req.symbol)
+        # ctpMdApi.subscribe中调用C++封装的MdApi.subscribeMarketData函数，将订阅行情的请求最终通过底层C++ CTP API发出
         self.subscribed.add(req.symbol)
 
     def close(self):
@@ -577,7 +581,8 @@ class CtpTdApi(TdApi):
         account = AccountData(
             accountid=data["AccountID"],
             balance=data["Balance"],
-            frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
+            frozen=data["FrozenMargin"] +
+            data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
@@ -609,10 +614,12 @@ class CtpTdApi(TdApi):
                     contract.option_portfolio = data["ProductID"]
 
                 contract.option_underlying = data["UnderlyingInstrID"]
-                contract.option_type = OPTIONTYPE_CTP2VT.get(data["OptionsType"], None)
+                contract.option_type = OPTIONTYPE_CTP2VT.get(
+                    data["OptionsType"], None)
                 contract.option_strike = data["StrikePrice"]
                 contract.option_index = str(data["StrikePrice"])
-                contract.option_expiry = datetime.strptime(data["ExpireDate"], "%Y%m%d")
+                contract.option_expiry = datetime.strptime(
+                    data["ExpireDate"], "%Y%m%d")
 
             self.gateway.on_contract(contract)
 
@@ -803,6 +810,7 @@ class CtpTdApi(TdApi):
 
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
+        # 这个可能使用C++实现的
 
         orderid = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
         order = req.create_order_data(orderid, self.gateway_name)

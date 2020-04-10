@@ -15,7 +15,11 @@ class CtaTemplate(ABC):
 
     author = ""
     parameters = []
+    # 外部指定，配置窗口输入，
     variables = []
+    # 内部缓存，自动缓存的一些变量
+    # 这个地方最好只是放str\int\float\bool,而其他类型的变量参数放到init里面去
+    # 这里的变量是类变量，只属于这个类的变量，实例化后不能访问
 
     def __init__(
         self,
@@ -26,32 +30,38 @@ class CtaTemplate(ABC):
     ):
         """这里把cta引擎加载进去了，但是不知道怎么加载进去的"""
         self.cta_engine = cta_engine
+        # 这个就是最开始使用的backtesting
         self.strategy_name = strategy_name
         self.vt_symbol = vt_symbol
 
         self.inited = False
-        #策略初始化好了之后才能变为True，主要是为计算指标加载需要的最少天数
+        # 策略初始化好了之后才能变为True，主要是为计算指标加载需要的最少天数
         self.trading = False
         self.pos = 0
 
         # Copy a new variables list here to avoid duplicate insert when multiple
         # strategy instances are created with the same strategy class.
         self.variables = copy(self.variables)
+        # 前后的self.variables是不一样的，后面这个是类的变量，前面那个是实例变量，可能是为了防止不同策略的之间的变量相互干扰
+        # 浅复制，改变都会一起改变，增加不会一起增加
         self.variables.insert(0, "inited")
         self.variables.insert(1, "trading")
         self.variables.insert(2, "pos")
-        #为什么不直接在前面定义这三个变量，而要在这个地方定义
+        # 这样子可以一直保持原来的那个变量可以是空的
 
-        self.update_setting(setting)#读出setting里面的字段，
+        self.update_setting(setting)
+        # 读出setting里面的字段，
 
     def update_setting(self, setting: dict):
         """
-        Update strategy parameter wtih value in setting dict.
+        Update strategy parameter with value in setting dict.
         """
         for name in self.parameters:
             if name in setting:
-                setattr(self, name, setting[name])#把参数名字设置到实例当中去
-    
+                setattr(self, name, setting[name])
+                # 把参数名字设置到实例当中去
+                # 默认的参数是在具体的策略实例当中的，当然你后期加载策略的时候也可以改
+
     #  classmethod 修饰符对应的函数不需要实例化
     @classmethod
     def get_class_parameters(cls):
@@ -97,8 +107,10 @@ class CtaTemplate(ABC):
         }
         return strategy_data
 
-    #@virtual表示子类必须实现的方法，要不然不能实例化，
-    # 这个是不是实盘才能用，感觉回测这个地方没有用到这个    
+    # @virtual表示子类必须实现的方法，要不然不能实例化，
+    # 这个是不是实盘才能用，感觉回测这个地方没有用到这个
+    # @virtual表示这个函数是回调函数，当某件事情发生的时候他会调用这些函数
+    # 但是不知道他是怎么把事件和函数关联起来的？？？
     @virtual
     def on_init(self):
         """
@@ -106,6 +118,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 策略启动
     @virtual
     def on_start(self):
         """
@@ -113,6 +126,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 策略停止
     @virtual
     def on_stop(self):
         """
@@ -120,6 +134,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 行情推送
     @virtual
     def on_tick(self, tick: TickData):
         """
@@ -127,6 +142,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # k线推送
     @virtual
     def on_bar(self, bar: BarData):
         """
@@ -134,6 +150,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 成交推送
     @virtual
     def on_trade(self, trade: TradeData):
         """
@@ -141,6 +158,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 委托推送
     @virtual
     def on_order(self, order: OrderData):
         """
@@ -148,6 +166,7 @@ class CtaTemplate(ABC):
         """
         pass
 
+    # 成交推送
     @virtual
     def on_stop_order(self, stop_order: StopOrder):
         """
@@ -195,7 +214,7 @@ class CtaTemplate(ABC):
             vt_orderids = self.cta_engine.send_order(
                 self, direction, offset, price, volume, stop, lock
             )
-        #//TODO:就是不知道这些参数是如何传入的
+        # //TODO:就是不知道这些参数是如何传入的
             return vt_orderids
         else:
             return []
@@ -220,6 +239,7 @@ class CtaTemplate(ABC):
         """
         self.cta_engine.write_log(msg, self)
 
+    # 查询状态
     def get_engine_type(self):
         """
         Return whether the cta_engine is backtesting or live trading.
@@ -237,7 +257,7 @@ class CtaTemplate(ABC):
         Load historical bar data for initializing strategy.
         """
         if not callback:
-            callback = self.on_bar#把on_bar里面的数据写入
+            callback = self.on_bar  # 把on_bar里面的数据写入
 
         self.cta_engine.load_bar(
             self.vt_symbol,
@@ -246,7 +266,7 @@ class CtaTemplate(ABC):
             callback,
             use_database
         )
-        #从RQdata上面提取数据，调用ctaegine中的load_bar，这个加载的数据存在哪个地方呢，以什么形式，是从use_database的数据库里面取得数据的。
+        # 这里面的cta_engine是指回测的backtesting.py,从RQdata上面提取数据，调用ctaegine中的load_bar，这个加载的数据存在哪个地方呢，以什么形式，是从use_database的数据库里面取得数据的。
 
     def load_tick(self, days: int):
         """
@@ -268,6 +288,7 @@ class CtaTemplate(ABC):
         if self.inited:
             self.cta_engine.send_email(msg, self)
 
+    # 同步数据
     def sync_data(self):
         """
         Sync strategy variables value into disk storage.

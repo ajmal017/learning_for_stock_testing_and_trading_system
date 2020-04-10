@@ -20,7 +20,8 @@ class DualThrustStrategy(CtaTemplate):
     k1 = 0.4
     k2 = 0.6
 
-    bars = []#主要用于缓存k线对象，因为我们主要是用k线进行回测
+    bars = []
+    #主要用于缓存k线对象，因为我们主要是用k线进行回测
 
     day_open = 0
     day_high = 0
@@ -43,8 +44,7 @@ class DualThrustStrategy(CtaTemplate):
 
         self.bg = BarGenerator(self.on_bar)
         self.am = ArrayManager()
-        self.bars = []#虽然上面已经定义了bars=[],但是这个地方还需要再定义，以免在同时存在多个策略时，多个策略使用
-        #同一个【】，使得策略混乱
+        self.bars = []#虽然上面已经定义了bars=[],但是这个地方还需要再定义，以免在同时在跑多个策略时，多个策略使用同一个变量，使得策略混乱
 
     def on_init(self):
         """
@@ -120,6 +120,7 @@ class DualThrustStrategy(CtaTemplate):
                 # 此处表示每天做多只能做一次
                 self.sell(self.short_entry, self.fixed_size, stop=True)
                 # 这个是一个止损单，当价格低于这个价格的时候他就会执行。然后立即开一个空头仓位
+                # stop=True表示停止单，默认为false表示限价单
                 if not self.short_entered:
                     self.short(self.short_entry, self.fixed_size, stop=True)
 

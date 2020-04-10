@@ -55,12 +55,13 @@ class EventEngine:
         self._active = False
         self._thread = Thread(target=self._run)#线程中工作的函数是self._run
         self._timer = Thread(target=self._run_timer)#此处表示线程工作中运行的是self._run_timer
-        self._handlers = defaultdict(list)#defaultdic可以在访问字典中不存在的键时，不会返回错误
+        self._handlers = defaultdict(list)#defaultdict可以在访问字典中不存在的键时，不会返回错误
         self._general_handlers = []
     # (2)
     def _run(self):
         """
         Get event from queue and then process it.
+        事件处理线程连续运行用
         如果队列为空且block为True，get()就使调用线程暂停，直至有项目可用；
         如果队列为空且block为False，队列将引发Empty异常。
         """
@@ -78,7 +79,7 @@ class EventEngine:
 
         Then distrubute event to those general handlers which listens
         to all types.
-
+        处理事件，调用注册在引擎中的监听函数
         优先检查是否存在对该事件进行监听的处理函数，然后调用通用处理函数进行处理
         计时器启动
         """
@@ -91,6 +92,7 @@ class EventEngine:
     def _run_timer(self):
         """
         Sleep by interval second(s) and then generate a timer event.
+        利用循环一直进行相应的监听
         """
         while self._active:
             sleep(self._interval)
@@ -114,6 +116,7 @@ class EventEngine:
         self._active = False
         self._timer.join()
         self._thread.join()
+        # 线程等待，我们的主线程不会等待子线程执行完毕再结束自身。可以使用Thread类的join()方法来子线程执行完毕以后，主线程再关闭。
         # 无参数，则等待到该线程结束，才开始执行下一个线程的join。
 
     def put(self, event: Event):

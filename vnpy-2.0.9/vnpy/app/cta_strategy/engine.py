@@ -69,13 +69,16 @@ class CtaEngine(BaseEngine):
     engine_type = EngineType.LIVE  # live trading engine
 
     setting_filename = "cta_strategy_setting.json"
+    # 这个主要用于存放策略的参数，update_strategy_setting这个地方加载策略参数
     data_filename = "cta_strategy_data.json"
+    # 保存策略运行时的状态变量数据
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine):
         """"""
         super(CtaEngine, self).__init__(
             main_engine, event_engine, APP_NAME)
-        #//TODO:这个super(CtaEngine)这个是什么意思
+        # 这个super(CtaEngine,self)和super()是一样的，在Python3中
+        # 这个APP_NAME = "CtaStrategy"
 
         self.strategy_setting = {} 
         # strategy_name: dict
@@ -83,9 +86,10 @@ class CtaEngine(BaseEngine):
         # strategy_name: dict
 
         self.classes = {}           
-        # class_name: stategy_class
+        # {'AtrRsiStrategy': <class 'vnpy.app.cta_strategy.strategies.atr_rsi_strategy.AtrRsiStrategy'>}
         self.strategies = {}        
         # strategy_name: strategy
+        # 这个是在add_strategy里面创建的
 
         self.symbol_strategy_map = defaultdict(
             list)                   
@@ -125,6 +129,7 @@ class CtaEngine(BaseEngine):
         #从策略数据文件cta_strategy_data.json中读取本地保存的数据。
         self.register_event()
         #将Tick，Position，Order，Trade事件推送给引擎相应处理函数。
+        # 这个地方就把tick和bar与对应的策略联系起来了
         self.write_log("CTA策略引擎初始化成功")
 
     def close(self):
@@ -633,10 +638,11 @@ class CtaEngine(BaseEngine):
         # Add vt_symbol to strategy map.
         strategies = self.symbol_strategy_map[vt_symbol]
         strategies.append(strategy)
+        # 把产品的对应的策略关联起来，一个产品可以运行多个策略
 
         # Update to setting file.
         self.update_strategy_setting(strategy_name, setting)
-
+        # 更新策略文件
         self.put_strategy_event(strategy)
 
     def init_strategy(self, strategy_name: str):
@@ -650,7 +656,7 @@ class CtaEngine(BaseEngine):
         Init strategies in queue.
         """
         strategy = self.strategies[strategy_name]
-
+   
         if strategy.inited:
             self.write_log(f"{strategy_name}已经完成初始化，禁止重复操作")
             return
@@ -659,7 +665,7 @@ class CtaEngine(BaseEngine):
 
         # Call on_init function of strategy
         self.call_strategy_func(strategy, strategy.on_init)
-
+        # 回调策略函数
         # Restore strategy data(variables)
         data = self.strategy_data.get(strategy_name, None)
         if data:
@@ -768,10 +774,12 @@ class CtaEngine(BaseEngine):
         Load strategy class from source code.
         """
         path1 = Path(__file__).parent.joinpath("strategies")
+        # C:\vnstudio\lib\site-packages\vnpy\app\cta_strategy\strategies
         self.load_strategy_class_from_folder(
             path1, "vnpy.app.cta_strategy.strategies")
 
         path2 = Path.cwd().joinpath("strategies")
+        # C:\Users\Administrator\strategies
         self.load_strategy_class_from_folder(path2, "strategies")
 
     def load_strategy_class_from_folder(self, path: Path, module_name: str = ""):
@@ -779,10 +787,13 @@ class CtaEngine(BaseEngine):
         Load strategy class from certain folder.
         """
         for dirpath, dirnames, filenames in os.walk(str(path)):
+        # os.walk() 方法用于通过在目录树中游走输出在目录中的文件名
             for filename in filenames:
+            
                 if filename.endswith(".py"):
                     strategy_module_name = ".".join(
                         [module_name, filename.replace(".py", "")])
+                    # vnpy.app.cta_strategy.strategies.dual_thrust_strategy
                 elif filename.endswith(".pyd"):
                     strategy_module_name = ".".join(
                         [module_name, filename.split(".")[0]])
@@ -795,14 +806,18 @@ class CtaEngine(BaseEngine):
         """
         try:
             module = importlib.import_module(module_name)
-            #//TODO:这个module_name的名字是从哪里来的
-
-            for name in dir(module):#返回模块的属性列表
+            # module_name=vnpy.app.cta_strategy.strategies.dual_thrust_strategy
+            # module是取出来的策略名字
+            # 这个module_name的名字是从load_strategy_class_from_folder
+            # <module 'vnpy.app.cta_strategy.strategies.double_ma_strategy' from 'C:\\vnstudio\\lib\\site-packages\\vnpy\\app\\cta_strategy\\strategies\\double_ma_strategy.py'>
+            for name in dir(module):#返回模块文件）的属性列表
                 value = getattr(module, name)
+                # 返回当前模块的name属性
                 if (isinstance(value, type) and issubclass
                 (value, CtaTemplate) and value is not CtaTemplate):
                 # 语法：isinstance（object，type）来判断一个对象是否是一个已知的类型。
                 # issubclass用于判断前者是否是后者的子类
+                # value=<class 'vnpy.app.cta_strategy.strategies.boll_channel_strategy.BollChannelStrategy'>
                     self.classes[value.__name__] = value
         except:  
             msg = f"策略文件{module_name}加载失败，触发异常：\n{traceback.format_exc()}"
@@ -874,26 +889,30 @@ class CtaEngine(BaseEngine):
         Load setting file.
         """
         self.strategy_setting = load_json(self.setting_filename)
-
+        #  turn to load_json in utility
         for strategy_name, strategy_config in self.strategy_setting.items():
+        # setting is a dicionary，and value is also a dictionary，dic nest dict
             self.add_strategy(
                 strategy_config["class_name"],
                 strategy_name,
                 strategy_config["vt_symbol"],
                 strategy_config["setting"]
             )
-
+        # 其中的策略setting可以传一个空字典，在策略里面有默认的参数
+    
     def update_strategy_setting(self, strategy_name: str, setting: dict):
         """
         Update setting file.
+        把策略的参数传入到参数文件夹保存
         """
         strategy = self.strategies[strategy_name]
-
+        # 根据策略名称获取策略实例
         self.strategy_setting[strategy_name] = {
             "class_name": strategy.__class__.__name__,
             "vt_symbol": strategy.vt_symbol,
             "setting": setting,
         }
+        # 配置策略参数
         save_json(self.setting_filename, self.strategy_setting)
 
     def remove_strategy_setting(self, strategy_name: str):
@@ -912,6 +931,7 @@ class CtaEngine(BaseEngine):
         """
         event = Event(EVENT_CTA_STOPORDER, stop_order)
         self.event_engine.put(event)
+        # 这个不是必须要注册的事件，所以它需要我们自己去注册
 
     def put_strategy_event(self, strategy: CtaTemplate):
         """
@@ -929,9 +949,11 @@ class CtaEngine(BaseEngine):
             msg = f"{strategy.strategy_name}: {msg}"
 
         log = LogData(msg=msg, gateway_name="CtaStrategy")
+        # 一个类用于存储信息，时间
         event = Event(type=EVENT_CTA_LOG, data=log)
+        # Event是一个类，用于存储事件类型和具体事件数据
         self.event_engine.put(event)
-
+        # 把相关事件推到队列当中去，然后会自动的去读取队列
     def send_email(self, msg: str, strategy: CtaTemplate = None):
         """
         Send email to default receiver.

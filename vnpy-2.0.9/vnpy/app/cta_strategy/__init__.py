@@ -15,6 +15,7 @@ class CtaStrategyApp(BaseApp):
     """"""
 
     app_name = APP_NAME
+    # APP_NAME = "CtaStrategy"
     app_module = __module__
     app_path = Path(__file__).parent
     display_name = "CTA策略"

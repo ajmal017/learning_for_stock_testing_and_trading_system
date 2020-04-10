@@ -86,7 +86,8 @@ class Exchange(Enum):
     SSE = "SSE"             # Shanghai Stock Exchange
     SZSE = "SZSE"           # Shenzhen Stock Exchange
     SGE = "SGE"             # Shanghai Gold Exchange
-    WXE = "WXE"             # Wuxi Steel Exchange
+    WXE = "WXE"
+    SZ = "SZ"                  # Wuxi Steel Exchange
 
     # Global
     SMART = "SMART"         # Smart Router for US stocks
@@ -147,3 +148,6 @@ class Interval(Enum):
     HOUR = "1h"
     DAILY = "d"
     WEEKLY = "w"
+
+if __name__ == "__main__":
+    print(Interval('1m'))

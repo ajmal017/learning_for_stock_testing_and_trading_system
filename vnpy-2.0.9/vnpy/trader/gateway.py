@@ -80,6 +80,7 @@ class BaseGateway(ABC):
         """"""
         self.event_engine = event_engine
         self.gateway_name = gateway_name
+        # 这个地方的CTP主要是用来做什么
 
     def on_event(self, type: str, data: Any = None):
         """
@@ -87,6 +88,7 @@ class BaseGateway(ABC):
         """
         event = Event(type, data)
         self.event_engine.put(event)
+        # 很可能是在哪个地方调用了这个方法，自动回调函数。
 
     def on_tick(self, tick: TickData):
         """
@@ -217,7 +219,7 @@ class BaseGateway(ABC):
         Reimplement this function if batch order supported on server.
         """
         vt_orderids = []
-
+        # 这个地方一直会保存一个空的吗？
         for req in reqs:
             vt_orderid = self.send_order(req)
             vt_orderids.append(vt_orderid)
