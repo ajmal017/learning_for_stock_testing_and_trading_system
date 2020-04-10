@@ -18,14 +18,14 @@ SETTINGS["log.console"] = True
 
 
 ctp_setting = {
-    "用户名": "",
-    "密码": "",
-    "经纪商代码": "",
-    "交易服务器": "",
-    "行情服务器": "",
-    "产品名称": "",
-    "授权编码": "",
-    "产品信息": ""
+    "用户名": "161098",
+    "密码": "zlb&198838",
+    "经纪商代码": "9999",
+    "交易服务器": "180.168.146.187:10100",
+    "行情服务器": "180.168.146.187:10110",
+    "产品名称": "simnow_client_test",
+    "授权编码": "0000000000000000",
+    "产品信息": "11111"
 }
 
 
@@ -48,13 +48,13 @@ def run_child():
     main_engine.connect(ctp_setting, "CTP")
     main_engine.write_log("连接CTP接口")
 
-    sleep(10)
+    sleep(1)
 
     cta_engine.init_engine()
     main_engine.write_log("CTA策略初始化完成")
 
     cta_engine.init_all_strategies()
-    sleep(60)   # Leave enough time to complete strategy initialization
+    sleep(1)   # Leave enough time to complete strategy initialization
     main_engine.write_log("CTA策略全部初始化")
 
     cta_engine.start_all_strategies()
@@ -110,4 +110,5 @@ def run_parent():
 
 
 if __name__ == "__main__":
-    run_parent()
+    # run_parent()
+    run_child()
